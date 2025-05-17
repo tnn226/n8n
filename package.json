@@ -3,7 +3,7 @@
   "version": "1.93.0",
   "private": true,
   "engines": {
-    "node": ">=18.15",
+    "node": ">=18.15 <= 24",
     "pnpm": ">=10.2.1"
   },
   "packageManager": "pnpm@10.2.1",
