@@ -2,16 +2,17 @@ ARG NODE_VERSION=20
 ARG N8N_VERSION=snapshot
 
 # 1. Create an image to build n8n
-FROM --platform=linux/amd64 n8nio/base:${NODE_VERSION} AS builder
+FROM node:${NODE_VERSION} AS builder
 
 # Build the application from source
 WORKDIR /src
 COPY . /src
+RUN corepack enable && corepack prepare pnpm@10.2.1 --activate
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store --mount=type=cache,id=pnpm-metadata,target=/root/.cache/pnpm/metadata DOCKER_BUILD=true pnpm install --frozen-lockfile
 RUN pnpm build
 
 # Delete all dev dependencies
-RUN jq 'del(.pnpm.patchedDependencies)' package.json > package.json.tmp; mv package.json.tmp package.json
+RUN npx jq 'del(.pnpm.patchedDependencies)' package.json > package.json.tmp; mv package.json.tmp package.json
 RUN node .github/scripts/trim-fe-packageJson.js
 
 # Delete any source code or typings
@@ -22,7 +23,7 @@ RUN mkdir /compiled
 RUN NODE_ENV=production DOCKER_BUILD=true pnpm --filter=n8n --prod --no-optional --legacy deploy /compiled
 
 # 2. Start with a new clean image with just the code that is needed to run n8n
-FROM n8nio/base:${NODE_VERSION}
+FROM node:${NODE_VERSION}
 ENV NODE_ENV=production
 
 ARG N8N_RELEASE_TYPE=dev
@@ -40,10 +41,10 @@ COPY docker/images/n8n/render-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 # Setup the Task Runner Launcher (シンプル化)
-ARG TARGETPLATFORM=linux/amd64
 ARG LAUNCHER_VERSION=1.1.2
 COPY docker/images/n8n/n8n-task-runners.json /etc/n8n-task-runners.json
-RUN mkdir /launcher-temp && \
+RUN apt-get update && apt-get install -y wget && \
+    mkdir /launcher-temp && \
     cd /launcher-temp && \
     wget https://github.com/n8n-io/task-runner-launcher/releases/download/${LAUNCHER_VERSION}/task-runner-launcher-${LAUNCHER_VERSION}-linux-amd64.tar.gz && \
     tar xvf task-runner-launcher-${LAUNCHER_VERSION}-linux-amd64.tar.gz --directory=/usr/local/bin && \
