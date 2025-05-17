@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: n8n
+    runtime: docker
+    dockerfilePath: ./docker/images/n8n/Dockerfile.render
+    dockerContext: .
+    plan: standard
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+    envVars:
+      - key: N8N_HOST
+        fromService:
+          type: web
+          name: n8n
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: N8N_PROTOCOL
+        value: https
+      - key: N8N_PORT
+        value: 5678
+      - key: N8N_ENCRYPTION_KEY
+        generateValue: true
+      - key: DB_TYPE
+        value: sqlite
+      - key: N8N_LOG_LEVEL
+        value: info
+      - key: WEBHOOK_URL
+        fromService:
+          type: web
+          name: n8n
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: TZ
+        value: Asia/Tokyo
+    disk:
+      name: n8n-data
+      mountPath: /data
+      sizeGB: 10
+    healthCheckPath: /healthz 
