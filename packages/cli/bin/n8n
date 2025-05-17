@@ -18,7 +18,7 @@ if (process.argv.length === 2) {
 	process.argv.push('start');
 }
 
-const ENFORCE_NODE_VERSION_RANGE = process.env.E2E_TESTS !== 'true';
+const ENFORCE_NODE_VERSION_RANGE = process.env.E2E_TESTS !== 'true' && process.env.NODE_VERSION_CHECK !== 'false';
 if (ENFORCE_NODE_VERSION_RANGE) {
 	const satisfies = require('semver/functions/satisfies');
 	const nodeVersion = process.versions.node;

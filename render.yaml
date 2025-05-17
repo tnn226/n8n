@@ -47,6 +47,8 @@ services:
         value: "*"
       - key: NODE_VERSION
         value: "20.15.0"
+      - key: NODE_VERSION_CHECK
+        value: "false"
     disk:
       name: n8n-data
       mountPath: /data

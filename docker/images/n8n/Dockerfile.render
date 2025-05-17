@@ -68,7 +68,8 @@ ENV NODE_OPTIONS="--max-old-space-size=512" \
     N8N_HIRING_BANNER_ENABLED=false \
     EXECUTIONS_PROCESS=main \
     EXECUTIONS_MODE=regular \
-    N8N_DISABLE_PRODUCTION_MAIN_PROCESS=false
+    N8N_DISABLE_PRODUCTION_MAIN_PROCESS=false \
+    NODE_VERSION_CHECK=false
 
 # ヘルスチェックエンドポイントを提供するための設定
 RUN echo '{"path": "/healthz", "response": {"status": 200, "body": "OK"}}' > /home/node/health-check.json
