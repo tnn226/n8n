@@ -5,10 +5,20 @@ services:
     dockerfilePath: ./docker/images/n8n/Dockerfile.render
     dockerContext: .
     plan: free
+    nodeBuild:
+      nodeVersion: 20.15.0
     scaling:
       minInstances: 1
       maxInstances: 1
+    buildCommand: ""
+    startCommand: ""
     envVars:
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: "true"
+      - key: N8N_BASIC_AUTH_USER
+        value: "admin"
+      - key: N8N_BASIC_AUTH_PASSWORD
+        generateValue: true
       - key: N8N_HOST
         fromService:
           type: web
@@ -33,6 +43,10 @@ services:
         value: Asia/Tokyo
       - key: NODE_OPTIONS
         value: --max-old-space-size=512
+      - key: N8N_API_ALLOW_ORIGIN
+        value: "*"
+      - key: NODE_VERSION
+        value: "20.15.0"
     disk:
       name: n8n-data
       mountPath: /data
