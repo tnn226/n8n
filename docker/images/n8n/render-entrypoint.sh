@@ -31,8 +31,15 @@ if [ ! -d "/data/.n8n" ]; then
   chown -R node:node /data/.n8n
 fi
 
-# メモリ使用量の最適化
-export NODE_OPTIONS="--max-old-space-size=1536 $NODE_OPTIONS"
+# 不要なサービスを無効化（無料プラン向け）
+export N8N_DIAGNOSTICS_ENABLED=false
+export N8N_HIRING_BANNER_ENABLED=false
+export EXECUTIONS_PROCESS=main
+export EXECUTIONS_MODE=regular
+export N8N_DISABLE_PRODUCTION_MAIN_PROCESS=false
+
+# メモリ使用量の最適化（無料プラン向け）
+export NODE_OPTIONS="--max-old-space-size=512"
 
 # 実行
 if [ "$#" -gt 0 ]; then

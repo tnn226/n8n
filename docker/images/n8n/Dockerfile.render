@@ -39,24 +39,16 @@ COPY --from=builder /compiled /usr/local/lib/node_modules/n8n
 COPY docker/images/n8n/render-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Setup the Task Runner Launcher
-ARG TARGETPLATFORM
+# Setup the Task Runner Launcher (シンプル化)
+ARG TARGETPLATFORM=linux/amd64
 ARG LAUNCHER_VERSION=1.1.2
 COPY docker/images/n8n/n8n-task-runners.json /etc/n8n-task-runners.json
-# Download, verify, then extract the launcher binary
-RUN \
-	if [[ "$TARGETPLATFORM" = "linux/amd64" ]]; then export ARCH_NAME="amd64"; \
-	elif [[ "$TARGETPLATFORM" = "linux/arm64" ]]; then export ARCH_NAME="arm64"; fi; \
-	mkdir /launcher-temp && \
-	cd /launcher-temp && \
-	wget https://github.com/n8n-io/task-runner-launcher/releases/download/${LAUNCHER_VERSION}/task-runner-launcher-${LAUNCHER_VERSION}-linux-${ARCH_NAME}.tar.gz && \
-	wget https://github.com/n8n-io/task-runner-launcher/releases/download/${LAUNCHER_VERSION}/task-runner-launcher-${LAUNCHER_VERSION}-linux-${ARCH_NAME}.tar.gz.sha256 && \
-	# The .sha256 does not contain the filename --> Form the correct checksum file
-	echo "$(cat task-runner-launcher-${LAUNCHER_VERSION}-linux-${ARCH_NAME}.tar.gz.sha256) task-runner-launcher-${LAUNCHER_VERSION}-linux-${ARCH_NAME}.tar.gz" > checksum.sha256 && \
-	sha256sum -c checksum.sha256 && \
-	tar xvf task-runner-launcher-${LAUNCHER_VERSION}-linux-${ARCH_NAME}.tar.gz --directory=/usr/local/bin && \
-	cd - && \
-	rm -r /launcher-temp
+RUN mkdir /launcher-temp && \
+    cd /launcher-temp && \
+    wget https://github.com/n8n-io/task-runner-launcher/releases/download/${LAUNCHER_VERSION}/task-runner-launcher-${LAUNCHER_VERSION}-linux-amd64.tar.gz && \
+    tar xvf task-runner-launcher-${LAUNCHER_VERSION}-linux-amd64.tar.gz --directory=/usr/local/bin && \
+    cd - && \
+    rm -r /launcher-temp
 
 RUN \
 	cd /usr/local/lib/node_modules/n8n && \
@@ -66,8 +58,8 @@ RUN \
 	mkdir -p /data/.n8n && \
 	chown -R node:node /data
 
-# メモリ最適化のための設定
-ENV NODE_OPTIONS="--max-old-space-size=1536"
+# メモリ最適化のための設定（無料プラン向け）
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Render 環境変数を設定
 ENV N8N_PORT=5678
@@ -76,6 +68,12 @@ ENV N8N_USER_FOLDER=/data/.n8n
 ENV DB_SQLITE_PATH=/data/database.sqlite
 ENV WEBHOOK_TUNNEL_URL=$RENDER_EXTERNAL_URL
 ENV TZ=Asia/Tokyo
+# 無料プラン用に重要な設定を追加
+ENV N8N_DIAGNOSTICS_ENABLED=false
+ENV N8N_HIRING_BANNER_ENABLED=false
+ENV EXECUTIONS_PROCESS=main
+ENV EXECUTIONS_MODE=regular
+ENV N8N_DISABLE_PRODUCTION_MAIN_PROCESS=false
 
 # ヘルスチェックエンドポイントを提供するための設定
 RUN echo '{"path": "/healthz", "response": {"status": 200, "body": "OK"}}' > /home/node/health-check.json
